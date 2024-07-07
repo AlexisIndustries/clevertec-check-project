@@ -9,35 +9,22 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class TransactionManager {
-    public List<Product> products = null;
+    public List<Product> products = ResourceManager.getResourceProducts();
 
     public TransactionManager() throws IOException {
     }
 
     public CheckInfo process(TransactionInfo transactionInfo) throws IOException {
         if (transactionInfo != null && transactionInfo.getError() == Error.BAD_REQUEST) {
-            if (transactionInfo.getSaveToFile() != null) {
-                return CheckInfo.builder()
-                        .error(Error.BAD_REQUEST)
-                        .saveToFile(transactionInfo.getSaveToFile())
-                        .build();
-            } else if (transactionInfo.getPathToFile() != null) {
-                return CheckInfo.builder()
-                        .error(Error.BAD_REQUEST)
-                        .pathToFile(transactionInfo.getPathToFile())
-                        .build();
-            }
             return CheckInfo.builder()
                     .error(Error.BAD_REQUEST)
                     .build();
         }
 
         assert transactionInfo != null;
-        products = ResourceManager.getPathProducts(transactionInfo.getPathToFile());
         if (products == null || products.isEmpty()) {
             return CheckInfo.builder()
                     .error(Error.BAD_REQUEST)
-                    .saveToFile(transactionInfo.getSaveToFile())
                     .build();
         }
         HashMap<Product, Integer> productsWithQuantity = convertIdQuantityToProducts(transactionInfo.getIdQuantityPairs());
@@ -45,7 +32,6 @@ public class TransactionManager {
         if (productsWithQuantity == null || productsWithQuantity.isEmpty()) {
             return CheckInfo.builder()
                     .error(Error.BAD_REQUEST)
-                    .saveToFile(transactionInfo.getSaveToFile())
                     .build();
         }
 
@@ -194,8 +180,6 @@ public class TransactionManager {
                 .productCheckRecordList(productCheckRecordList)
                 .totalPrice(totalPrice)
                 .discountCard(discountCard)
-                .pathToFile(transactionInfo.getPathToFile())
-                .saveToFile(transactionInfo.getSaveToFile())
                 .error(Error.NO_ERROR)
                 .build();
     }
