@@ -17,13 +17,13 @@ public class CheckManager {
     }
 
     private void processNotEnoughMoneyCheckInfo(CheckInfo checkInfo) throws IOException {
-        resultTableWriter.writeError(checkInfo.getError());
-        consoleWriter.writeError(checkInfo.getError());
+        resultTableWriter.writeError(checkInfo);
+        consoleWriter.writeError(checkInfo);
     }
 
     private void processBadRequestCheckInfo(CheckInfo checkInfo) throws IOException {
-        resultTableWriter.writeError(checkInfo.getError());
-        consoleWriter.writeError(checkInfo.getError());
+        resultTableWriter.writeError(checkInfo);
+        consoleWriter.writeError(checkInfo);
     }
 
     private void processNoErrorCheckInfo(CheckInfo checkInfo) throws IOException {

@@ -8,25 +8,50 @@ import ru.clevertec.check.models.ProductCheckRecord;
 import ru.clevertec.check.utils.DecimalRoundPrecisionUtils;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 
 public class ResultTableWriter implements Writer{
     private final String RESULT_FILENAME = "./result.csv";
+
     private final String[] RESULT_DATETIME_HEADERS = {"Date", "Time"};
     private final String[] RESULT_PRODUCTS_HEADERS = {"QTY", "DESCRIPTION", "PRICE", "DISCOUNT", "TOTAL"};
     private final String[] RESULT_DISCOUNT_CARD_HEADERS = {"DISCOUNT CARD", "DISCOUNT PERCENTAGE"};
     private final String[] RESULT_TOTAL_PRICE_HEADERS = {"TOTAL PRICE", "TOTAL DISCOUNT", "TOTAL WITH DISCOUNT"};
 
-    public void writeError(Error error) throws IOException {
-        File file = new File(RESULT_FILENAME);
+    public void writeError(CheckInfo checkInfo) throws IOException {
+        File file;
+        if (checkInfo.getSaveToFile() != null) {
+            file = new File(checkInfo.getSaveToFile());
+        }
+        else {
+            file = new File(RESULT_FILENAME);
+        }
+        if (!file.exists()) {
+            Path filePath = file.toPath();
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+        }
         try (FileWriter fw = new FileWriter(file)) {
             fw.write("ERROR\n");
-            fw.write(error.toString().replaceAll("_", " "));
+            fw.write(checkInfo.getError().toString().replaceAll("_", " "));
         }
     }
 
     public void writeInfo(CheckInfo checkInfo) throws IOException {
-        File file = new File(RESULT_FILENAME);
+        File file;
+        if (checkInfo.getSaveToFile() != null) {
+            file = new File(checkInfo.getSaveToFile());
+        }
+        else {
+            file = new File(RESULT_FILENAME);
+        }
+        if (!file.exists()) {
+            Path filePath = file.toPath();
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+        }
         CSVPrinter printer = new CSVPrinter(new PrintWriter(file), CSVFormat.DEFAULT.builder().setDelimiter(";").build());
 
         double totalDiscount  = checkInfo.getProductCheckRecordList().stream().mapToDouble(ProductCheckRecord::getDiscount).sum();

@@ -15,6 +15,8 @@ import java.util.List;
 public class CheckInfo {
     private LocalDateTime checkTime;
     private List<ProductCheckRecord> productCheckRecordList;
+    private String pathToFile;
+    private String saveToFile;
     private DiscountCard discountCard;
     private double totalPrice;
     private Error error;

@@ -5,10 +5,7 @@ import org.apache.commons.csv.CSVRecord;
 import ru.clevertec.check.models.DiscountCard;
 import ru.clevertec.check.models.Product;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,18 +18,7 @@ public class ResourceManager {
         List<Product> products = new ArrayList<>();
         Reader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(ResourceManager.class.getResourceAsStream("/products.csv"))));
 
-        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
-                .setHeader(PRODUCTS_HEADERS)
-                .setSkipHeaderRecord(true)
-                .setDelimiter(";")
-                .build();
-
-        Iterable<CSVRecord> records = csvFormat.parse(reader);
-        for (CSVRecord record : records) {
-            products.add(new Product(Integer.parseInt(record.get(0)), record.get(1), Double.parseDouble(record.get(2)), Integer.parseInt(record.get(3)), Boolean.parseBoolean(record.get(4))));
-        }
-
-        return products;
+        return getProducts(products, reader);
     }
 
     public static List<DiscountCard> getResourceDiscountCards() throws IOException {
@@ -53,5 +39,29 @@ public class ResourceManager {
         return discountCards;
     }
 
+    public static List<Product> getPathProducts(String path) throws IOException {
+        List<Product> products = new ArrayList<>();
+        File file = new File(path);
+
+        Reader reader = new BufferedReader(new FileReader(file));
+
+        return getProducts(products, reader);
+    }
+
+    private static List<Product> getProducts(List<Product> products, Reader reader) throws IOException {
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder()
+                .setHeader(PRODUCTS_HEADERS)
+                .setSkipHeaderRecord(true)
+                .setDelimiter(";")
+                .build();
+        Iterable<CSVRecord> records = csvFormat.parse(reader);
+        for (CSVRecord record : records) {
+            if (record.stream().count() == 5) {
+                products.add(new Product(Integer.parseInt(record.get(0)), record.get(1), Double.parseDouble(record.get(2)), Integer.parseInt(record.get(3)), Boolean.parseBoolean(record.get(4))));
+            }
+        }
+
+        return products;
+    }
 
 }

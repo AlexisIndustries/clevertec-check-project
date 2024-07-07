@@ -179,13 +179,16 @@ public class TransactionManager {
 
     private HashMap<Product, Integer> convertIdQuantityToProducts(HashMap<Integer, Integer> idQuantityPairs) throws IOException {
         HashMap<Product, Integer> products = new HashMap<>();
-
+        boolean isFall = false;
         for (Map.Entry<Integer, Integer> entry : idQuantityPairs.entrySet()) {
+            if (entry.getKey() < 0 || entry.getKey() > 20) {
+                isFall = true;
+                break;
+            }
             Product product = this.products.get(entry.getKey() - 1);
             Integer quantity = entry.getValue();
             products.put(product, quantity);
         }
-
-        return products;
+        return isFall ? null : products;
     }
 }

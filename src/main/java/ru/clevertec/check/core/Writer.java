@@ -7,5 +7,5 @@ import java.io.IOException;
 
 public interface Writer {
     void writeInfo(CheckInfo checkInfo) throws IOException;
-    void writeError(Error error) throws IOException;
+    void writeError(CheckInfo checkInfo) throws IOException;
 }

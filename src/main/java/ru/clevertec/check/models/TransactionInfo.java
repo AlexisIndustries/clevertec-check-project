@@ -14,6 +14,8 @@ public class TransactionInfo {
     private HashMap<Integer, Integer> idQuantityPairs;
     private int discountCard;
     private double balanceDebitCard;
+    private String pathToFile;
+    private String saveToFile;
     private Error error;
 
     public TransactionInfo() {

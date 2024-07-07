@@ -8,11 +8,11 @@ import ru.clevertec.check.utils.DecimalRoundPrecisionUtils;
 import java.time.format.DateTimeFormatter;
 
 public class ConsoleWriter implements Writer {
-    public void writeError(Error error) {
-        System.out.println("ERROR\n" + error);
+    public void writeError(CheckInfo checkInfo) {
+        System.out.println("ERROR\n" + checkInfo.getError());
         System.out.println();
         System.out.println("Произошла ошибка транзакции!");
-        switch (error) {
+        switch (checkInfo.getError()) {
             case NOT_ENOUGH_MONEY -> System.out.println("У вас недостаточно денег на балансе. Пожалуйста укажите большую сумму.");
             case BAD_REQUEST -> System.out.println("Вы ввели неправильный запрос. Пожалуйста, перепроверьте аргументы которые вы ввели.");
             case INTERNAL_SERVER_ERROR -> System.out.println("Произошла внутренняя ошибка.");
