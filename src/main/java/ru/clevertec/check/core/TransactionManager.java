@@ -9,20 +9,45 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class TransactionManager {
-    public final List<Product> products = ResourceManager.getResourceProducts();
+    public List<Product> products = null;
 
     public TransactionManager() throws IOException {
     }
 
     public CheckInfo process(TransactionInfo transactionInfo) throws IOException {
         if (transactionInfo != null && transactionInfo.getError() == Error.BAD_REQUEST) {
+            if (transactionInfo.getSaveToFile() != null) {
+                return CheckInfo.builder()
+                        .error(Error.BAD_REQUEST)
+                        .saveToFile(transactionInfo.getSaveToFile())
+                        .build();
+            } else if (transactionInfo.getPathToFile() != null) {
+                return CheckInfo.builder()
+                        .error(Error.BAD_REQUEST)
+                        .pathToFile(transactionInfo.getPathToFile())
+                        .build();
+            }
             return CheckInfo.builder()
                     .error(Error.BAD_REQUEST)
                     .build();
         }
 
         assert transactionInfo != null;
+        products = ResourceManager.getPathProducts(transactionInfo.getPathToFile());
+        if (products == null || products.isEmpty()) {
+            return CheckInfo.builder()
+                    .error(Error.BAD_REQUEST)
+                    .saveToFile(transactionInfo.getSaveToFile())
+                    .build();
+        }
         HashMap<Product, Integer> productsWithQuantity = convertIdQuantityToProducts(transactionInfo.getIdQuantityPairs());
+
+        if (productsWithQuantity == null || productsWithQuantity.isEmpty()) {
+            return CheckInfo.builder()
+                    .error(Error.BAD_REQUEST)
+                    .saveToFile(transactionInfo.getSaveToFile())
+                    .build();
+        }
 
         if (transactionInfo.getDiscountCard() != 0 && transactionInfo.getDiscountCard() <= 9999 && transactionInfo.getDiscountCard() >= 1000) {
             List<DiscountCard> discountCards = ResourceManager.getResourceDiscountCards();
@@ -154,8 +179,7 @@ public class TransactionManager {
 
     }
 
-
-    private CheckInfo checkTotalPriceAndBalance(TransactionInfo transactionInfo, List<ProductCheckRecord> productCheckRecordList, DiscountCard discountCard) {
+    private CheckInfo checkTotalPriceAndBalance(TransactionInfo transactionInfo, List<ProductCheckRecord> productCheckRecordList, DiscountCard discountCard) throws IOException {
         double totalPrice = productCheckRecordList.stream().mapToDouble(ProductCheckRecord::getTotal).sum();
         double totalDiscount = productCheckRecordList.stream().mapToDouble(ProductCheckRecord::getDiscount).sum();
 
@@ -165,27 +189,29 @@ public class TransactionManager {
                     .build();
         }
 
-
-
         return CheckInfo.builder()
                 .checkTime(LocalDateTime.now())
                 .productCheckRecordList(productCheckRecordList)
                 .totalPrice(totalPrice)
                 .discountCard(discountCard)
-
+                .pathToFile(transactionInfo.getPathToFile())
+                .saveToFile(transactionInfo.getSaveToFile())
                 .error(Error.NO_ERROR)
                 .build();
     }
 
     private HashMap<Product, Integer> convertIdQuantityToProducts(HashMap<Integer, Integer> idQuantityPairs) throws IOException {
         HashMap<Product, Integer> products = new HashMap<>();
-
+        boolean isFall = false;
         for (Map.Entry<Integer, Integer> entry : idQuantityPairs.entrySet()) {
+            if (entry.getKey() < 0 || entry.getKey() > 20) {
+                isFall = true;
+                break;
+            }
             Product product = this.products.get(entry.getKey() - 1);
             Integer quantity = entry.getValue();
             products.put(product, quantity);
         }
-
-        return products;
+        return isFall ? null : products;
     }
 }
