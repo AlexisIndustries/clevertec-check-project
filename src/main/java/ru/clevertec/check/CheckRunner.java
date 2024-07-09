@@ -5,9 +5,10 @@ import ru.clevertec.check.models.CheckInfo;
 import ru.clevertec.check.models.TransactionInfo;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class CheckRunner {
-    public static void main(String... args) throws IOException {
+    public static void main(String... args) throws IOException, SQLException {
         CommandLineArgumentsParser parser = new CommandLineArgumentsParser(args);
         TransactionInfo transactionInfo = parser.parse();
         TransactionManager transactionManager = new TransactionManager();

@@ -1,20 +1,23 @@
 package ru.clevertec.check.core;
 
+import ru.clevertec.check.database.DatabaseAvailabilityChecker;
+import ru.clevertec.check.database.DatabaseResourceManager;
 import ru.clevertec.check.models.*;
 import ru.clevertec.check.models.Error;
 import ru.clevertec.check.utils.DecimalRoundPrecisionUtils;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class TransactionManager {
-    public final List<Product> products = ResourceManager.getResourceProducts();
+    private List<Product> products;
 
     public TransactionManager() throws IOException {
     }
 
-    public CheckInfo process(TransactionInfo transactionInfo) throws IOException {
+    public CheckInfo process(TransactionInfo transactionInfo) throws IOException, SQLException {
         if (transactionInfo != null && transactionInfo.getError() == Error.BAD_REQUEST) {
             return CheckInfo.builder()
                     .error(Error.BAD_REQUEST)
@@ -22,14 +25,30 @@ public class TransactionManager {
         }
 
         assert transactionInfo != null;
+
+        List<DiscountCard> discountCards;
+        if (DatabaseAvailabilityChecker.isNecessaryTablesAvailable(transactionInfo.getDataSourceUrl(), transactionInfo.getDataSourceUsername(), transactionInfo.getDataSourcePassword())) {
+            DatabaseResourceManager databaseResourceManager = DatabaseResourceManager.builder()
+                    .url(transactionInfo.getDataSourceUrl())
+                    .username(transactionInfo.getDataSourceUsername())
+                    .password(transactionInfo.getDataSourcePassword())
+                    .build();
+            products = databaseResourceManager.getDatabaseProducts();
+            discountCards = databaseResourceManager.getDatabaseDiscountCards();
+        } else {
+            return CheckInfo.builder()
+                    .error(Error.BAD_REQUEST)
+                    .build();
+        }
+
         HashMap<Product, Integer> productsWithQuantity = convertIdQuantityToProducts(transactionInfo.getIdQuantityPairs());
 
         if (transactionInfo.getDiscountCard() != 0 && transactionInfo.getDiscountCard() <= 9999 && transactionInfo.getDiscountCard() >= 1000) {
-            List<DiscountCard> discountCards = ResourceManager.getResourceDiscountCards();
             Optional<DiscountCard> validDiscountCard = discountCards.stream().filter(ds -> ds.getNumber() == transactionInfo.getDiscountCard()).findFirst();
 
             if (validDiscountCard.isPresent()) {
                 List<ProductCheckRecord> productCheckRecords = new LinkedList<>();
+                assert productsWithQuantity != null;
                 for (Map.Entry<Product, Integer> entry : productsWithQuantity.entrySet()) {
                     if (entry.getKey().isWholesaleProduct()) {
                         if (entry.getKey().getQuantityInStock() < entry.getValue()) {
@@ -51,6 +70,7 @@ public class TransactionManager {
             }
             List<ProductCheckRecord> productCheckRecords = new LinkedList<>();
             DiscountCard customDiscountCard = DiscountCard.builder().discountAmount(2).number(transactionInfo.getDiscountCard()).build();
+            assert productsWithQuantity != null;
             for (Map.Entry<Product, Integer> entry : productsWithQuantity.entrySet()) {
                 if (entry.getKey().isWholesaleProduct()) {
                     if (entry.getKey().getQuantityInStock() < entry.getValue()) {
@@ -72,6 +92,7 @@ public class TransactionManager {
         }
         else {
             List<ProductCheckRecord> productCheckRecords = new LinkedList<>();
+            assert productsWithQuantity != null;
             for (Map.Entry<Product, Integer> entry : productsWithQuantity.entrySet()) {
                 if (entry.getKey().isWholesaleProduct()) {
                     if (entry.getKey().getQuantityInStock() < entry.getValue()) {
@@ -165,14 +186,12 @@ public class TransactionManager {
                     .build();
         }
 
-
-
         return CheckInfo.builder()
                 .checkTime(LocalDateTime.now())
                 .productCheckRecordList(productCheckRecordList)
                 .totalPrice(totalPrice)
                 .discountCard(discountCard)
-
+                .saveToFile(transactionInfo.getSaveToFile())
                 .error(Error.NO_ERROR)
                 .build();
     }

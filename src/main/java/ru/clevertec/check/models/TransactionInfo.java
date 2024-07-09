@@ -1,14 +1,12 @@
 package ru.clevertec.check.models;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.HashMap;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @ToString
 public class TransactionInfo {
     private HashMap<Integer, Integer> idQuantityPairs;
@@ -16,6 +14,9 @@ public class TransactionInfo {
     private double balanceDebitCard;
     private String pathToFile;
     private String saveToFile;
+    private String dataSourceUrl;
+    private String dataSourceUsername;
+    private String dataSourcePassword;
     private Error error;
 
     public TransactionInfo() {

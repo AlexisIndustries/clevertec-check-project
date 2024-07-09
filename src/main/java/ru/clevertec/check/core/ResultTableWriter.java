@@ -3,7 +3,6 @@ package ru.clevertec.check.core;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import ru.clevertec.check.models.CheckInfo;
-import ru.clevertec.check.models.Error;
 import ru.clevertec.check.models.ProductCheckRecord;
 import ru.clevertec.check.utils.DecimalRoundPrecisionUtils;
 
@@ -21,18 +20,7 @@ public class ResultTableWriter implements Writer{
     private final String[] RESULT_TOTAL_PRICE_HEADERS = {"TOTAL PRICE", "TOTAL DISCOUNT", "TOTAL WITH DISCOUNT"};
 
     public void writeError(CheckInfo checkInfo) throws IOException {
-        File file;
-        if (checkInfo.getSaveToFile() != null) {
-            file = new File(checkInfo.getSaveToFile());
-        }
-        else {
-            file = new File(RESULT_FILENAME);
-        }
-        if (!file.exists()) {
-            Path filePath = file.toPath();
-            Files.createDirectories(filePath.getParent());
-            Files.createFile(filePath);
-        }
+        File file = getFile(checkInfo);
         try (FileWriter fw = new FileWriter(file)) {
             fw.write("ERROR\n");
             fw.write(checkInfo.getError().toString().replaceAll("_", " "));
@@ -40,18 +28,7 @@ public class ResultTableWriter implements Writer{
     }
 
     public void writeInfo(CheckInfo checkInfo) throws IOException {
-        File file;
-        if (checkInfo.getSaveToFile() != null) {
-            file = new File(checkInfo.getSaveToFile());
-        }
-        else {
-            file = new File(RESULT_FILENAME);
-        }
-        if (!file.exists()) {
-            Path filePath = file.toPath();
-            Files.createDirectories(filePath.getParent());
-            Files.createFile(filePath);
-        }
+        File file = getFile(checkInfo);
         CSVPrinter printer = new CSVPrinter(new PrintWriter(file), CSVFormat.DEFAULT.builder().setDelimiter(";").build());
 
         double totalDiscount  = checkInfo.getProductCheckRecordList().stream().mapToDouble(ProductCheckRecord::getDiscount).sum();
@@ -68,6 +45,22 @@ public class ResultTableWriter implements Writer{
         printPartialData(checkInfo, printer, RESULT_TOTAL_PRICE_HEADERS);
         printer.printRecord((DecimalRoundPrecisionUtils.round(checkInfo.getTotalPrice(), 2)) + "$", (DecimalRoundPrecisionUtils.round(totalDiscount, 2)) + "$", DecimalRoundPrecisionUtils.round(checkInfo.getTotalPrice() - totalDiscount, 2) + "$");
         printer.flush();
+    }
+
+    private File getFile(CheckInfo checkInfo) throws IOException {
+        File file;
+        if (checkInfo.getSaveToFile() != null) {
+            file = new File(checkInfo.getSaveToFile());
+        }
+        else {
+            file = new File(RESULT_FILENAME);
+        }
+        if (!file.exists()) {
+            Path filePath = file.toPath();
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+        }
+        return file;
     }
 
     private void printPartialData(CheckInfo checkInfo, CSVPrinter printer, Object[] resultDiscountCardHeaders) throws IOException {
