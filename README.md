@@ -25,6 +25,11 @@
 
 Результат выполнения записывается в файл `result.csv`.
 
+## Пример использования
+
+`java build/libs/*.java id-quantity discountCard=xxxx
+balanceDebitCard=xxxx`
+
 ## Автор
 
 Бобрович Алексей Олегович
